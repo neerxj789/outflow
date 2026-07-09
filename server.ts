@@ -20,9 +20,14 @@ async function startServer() {
 
   app.post("/api/search", async (req, res) => {
     try {
-      const { keywords } = req.body;
+      const { keywords, apiKey } = req.body;
       if (!keywords) {
         return res.status(400).json({ error: "Keywords are required" });
+      }
+
+      let client = ai;
+      if (apiKey) {
+        client = new GoogleGenAI({ apiKey });
       }
 
       const prompt = `Search the internet for business details using the following keywords: "${keywords}".
@@ -31,7 +36,7 @@ Return a list of businesses with their name, phone number, website, and email.
 If any piece of information is not found, leave it empty or null.
 Make sure to search the web and only return real data.`;
 
-      const response = await ai.models.generateContent({
+      const response = await client.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {
@@ -88,9 +93,14 @@ Make sure to search the web and only return real data.`;
   
   app.post("/api/analyze", async (req, res) => {
     try {
-      const { websiteUrl, topic, businessName } = req.body;
+      const { websiteUrl, topic, businessName, apiKey } = req.body;
       if (!topic) {
         return res.status(400).json({ error: "Topic is required" });
+      }
+
+      let client = ai;
+      if (apiKey) {
+        client = new GoogleGenAI({ apiKey });
       }
 
       let crawledText = "";
@@ -132,7 +142,7 @@ Output exactly as a JSON object with a 'pain_points' array of strings.`;
 
       const prompt = `Topic: ${topic} \n\n Input Text: \n ${crawledText}`;
 
-      const aiResponse = await ai.models.generateContent({
+      const aiResponse = await client.models.generateContent({
         model: "gemini-3.5-flash",
         contents: prompt,
         config: {

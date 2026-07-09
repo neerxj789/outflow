@@ -4,11 +4,11 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Download, Plus, Trash2, FileJson, Building2, AlertCircle, Users, PhoneCall, Clock, CheckCircle, XCircle, ArrowRight, Zap, Target, ChevronRight, Check, MapPin, Database } from "lucide-react";
+import { Download, Plus, Trash2, FileJson, Building2, AlertCircle, Users, PhoneCall, Clock, CheckCircle, XCircle, ArrowRight, Zap, Target, ChevronRight, Check, MapPin, Database, ChevronDown } from "lucide-react";
 import { motion } from "motion/react";
 import { auth, db, signInWithPopup, signOut, googleProvider, onAuthStateChanged, User } from "./firebase";
 import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
-import { LogIn, LogOut, Share2, Link as LinkIcon, User as UserIcon, Sparkles, X, Coffee } from "lucide-react";
+import { LogIn, LogOut, Share2, Link as LinkIcon, User as UserIcon, Sparkles, X, Coffee, Settings } from "lucide-react";
 
 interface Business {
   painPoints?: string[];
@@ -26,6 +26,75 @@ interface TabData {
   name: string;
   businesses: Business[];
 }
+
+const CustomDropdown = ({ 
+  value, 
+  onChange, 
+  options, 
+  className = "", 
+  variant = "default" 
+}: { 
+  value: string, 
+  onChange: (val: string) => void, 
+  options: { label: string, value: string, className?: string }[], 
+  className?: string,
+  variant?: "default" | "status"
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.custom-dropdown-container')) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [isOpen]);
+
+  const selectedOption = options.find(o => o.value === value) || options[0];
+
+  return (
+    <div className={`relative custom-dropdown-container ${className}`}>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className={`w-full flex items-center justify-between gap-2 border px-3 py-2 text-sm rounded-lg outline-none transition-colors ${
+          variant === 'default' 
+            ? 'bg-black/40 border-white/10 text-white hover:bg-black/60 focus:ring-2 focus:ring-blue-500/50'
+            : selectedOption.className || 'bg-gray-800 border-gray-700 text-gray-200'
+        }`}
+      >
+        <span className="truncate">{selectedOption.label}</span>
+        <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
+      </button>
+      
+      {isOpen && (
+        <div className="absolute z-50 mt-1 w-full min-w-[max-content] bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden py-1">
+          {options.map((option) => (
+            <button
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-800 transition-colors ${
+                value === option.value ? 'bg-gray-800/50 text-white' : 'text-gray-300'
+              } ${option.className && variant === 'status' ? option.className.replace(/border-[a-z0-9-/]+/, '').replace(/focus:ring-[a-z0-9-/]+/, '') : ''}`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 function extractBusinesses(input: string): Business[] {
   let results: Business[] = [];
@@ -439,6 +508,10 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
   const [selectedTopic, setSelectedTopic] = useState("Branding & Web Design");
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
+  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem("userApiKey") || "");
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAiWarningOpen, setIsAiWarningOpen] = useState(false);
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -627,6 +700,11 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
 
   const handleBulkAnalyze = async () => {
     if (selectedRows.size === 0) return;
+    
+    if (!userApiKey) {
+      setIsAiWarningOpen(true);
+      return;
+    }
 
     const businessesToAnalyze = activeTab?.businesses.filter(b => selectedRows.has(b.id)) || [];
 
@@ -648,7 +726,8 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
           body: JSON.stringify({
             websiteUrl: business.website?.startsWith('http') ? business.website : (business.website ? `https://${business.website}` : ''),
             topic: selectedTopic,
-            businessName: business.name
+            businessName: business.name,
+            apiKey: userApiKey
           })
         });
 
@@ -770,6 +849,7 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
                   {user.displayName || user.email}
                 </div>
                 <div className="w-px h-4 bg-gray-800"></div>
+                <button onClick={() => setIsSettingsOpen(true)} className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors" title="Settings"><Settings className="w-4 h-4"/></button>
                 <button onClick={onSignOut} className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors"><LogOut className="w-4 h-4"/> Sign Out</button>
               </div>
             ) : (
@@ -924,16 +1004,16 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
                 {activeTab?.businesses.length || 0} Contacts Extracted
               </h3>
               <div className="flex items-center gap-3">
-                <select
+                <CustomDropdown
                   value={selectedTopic}
-                  onChange={(e) => setSelectedTopic(e.target.value)}
-                  className="bg-black/40 border border-white/10 text-white text-sm rounded-lg backdrop-blur-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500/50"
-                >
-                  <option value="Branding & Web Design">Branding & Web Design</option>
-                  <option value="SEO & Content Marketing">SEO & Content Marketing</option>
-                  <option value="Social Media Management">Social Media Management</option>
-                  <option value="Operational Efficiency">Operational Efficiency</option>
-                </select>
+                  onChange={(val) => setSelectedTopic(val)}
+                  options={[
+                    { label: "Branding & Web Design", value: "Branding & Web Design" },
+                    { label: "SEO & Content Marketing", value: "SEO & Content Marketing" },
+                    { label: "Social Media Management", value: "Social Media Management" },
+                    { label: "Operational Efficiency", value: "Operational Efficiency" }
+                  ]}
+                />
                 <button
                   onClick={handleBulkAnalyze}
                   disabled={selectedRows.size === 0}
@@ -1011,23 +1091,19 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
                         </td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-100">{b.name}</td>
                         <td className="px-6 py-4 text-sm">
-                          <select
+                          <CustomDropdown
                             value={b.status || 'New'}
-                            onChange={(e) => updateStatus(b.id, e.target.value)}
-                            className={`border text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full min-w-[130px] px-3 py-2.5 outline-none font-medium transition-colors ${
-                              b.status === 'Contacted' ? 'bg-blue-900/30 text-blue-300 border-blue-800/50' :
-                              b.status === 'Interested' ? 'bg-green-900/30 text-green-300 border-green-800/50' :
-                              b.status === 'Not Interested' ? 'bg-red-900/30 text-red-300 border-red-800/50' :
-                              b.status === 'Follow Up' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-800/50' :
-                              'bg-gray-800 text-gray-200 border-gray-700'
-                            }`}
-                          >
-                            <option value="New" className="bg-gray-900 text-gray-200">New</option>
-                            <option value="Contacted" className="bg-gray-900 text-gray-200">Contacted</option>
-                            <option value="Interested" className="bg-gray-900 text-gray-200">Interested</option>
-                            <option value="Not Interested" className="bg-gray-900 text-gray-200">Not Interested</option>
-                            <option value="Follow Up" className="bg-gray-900 text-gray-200">Follow Up</option>
-                          </select>
+                            onChange={(val) => updateStatus(b.id, val)}
+                            variant="status"
+                            className="min-w-[150px]"
+                            options={[
+                              { label: "New", value: "New", className: "bg-gray-800 text-gray-200 border-gray-700" },
+                              { label: "Contacted", value: "Contacted", className: "bg-blue-900/30 text-blue-300 border-blue-800/50" },
+                              { label: "Interested", value: "Interested", className: "bg-green-900/30 text-green-300 border-green-800/50" },
+                              { label: "Not Interested", value: "Not Interested", className: "bg-red-900/30 text-red-300 border-red-800/50" },
+                              { label: "Follow Up", value: "Follow Up", className: "bg-yellow-900/30 text-yellow-300 border-yellow-800/50" }
+                            ]}
+                          />
                         </td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-400 whitespace-nowrap">{b.number || "-"}</td>
                         <td className="px-6 py-4 text-sm font-medium text-gray-400">
@@ -1105,6 +1181,106 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
           <div>Created with love by <a href="https://framesbyneer.in" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">Neer</a></div>
         </div>
       </footer>
+      
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsSettingsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+              <Settings className="w-5 h-5" /> Settings
+            </h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Gemini API Key</label>
+                <input
+                  type="password"
+                  value={userApiKey}
+                  onChange={(e) => setUserApiKey(e.target.value)}
+                  placeholder="AIza..."
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                />
+                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                  Provide your own Gemini API key to run AI analysis without limits. This key is stored locally in your browser (localStorage), and whenever you request AI analysis for businesses, the custom API key is forwarded to the backend server and securely used to run the Gemini analysis on your behalf, allowing you to analyze contacts without quota restrictions.
+                </p>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  localStorage.setItem("userApiKey", userApiKey);
+                  setIsSettingsOpen(false);
+                }}
+                className="px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-sm"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAiWarningOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-gray-900 border border-orange-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onClick={() => setIsAiWarningOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
+                <AlertCircle className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-semibold text-white">AI Not Configured</h2>
+            </div>
+            
+            <div className="space-y-4 text-sm text-gray-300">
+              <p>Analysing requires AI features. To use the AI Analysis features, you need to configure a free Gemini API key, or buy a paid plan (which is not yet available). This ensures you can analyze unlimited leads without server limits.</p>
+              
+              <div className="bg-gray-950 rounded-xl p-4 border border-gray-800 space-y-3">
+                <h4 className="font-medium text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-blue-400"/> How to set it up (Takes 1 min)</h4>
+                <ol className="list-decimal list-inside space-y-2 text-gray-400">
+                  <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google AI Studio</a>.</li>
+                  <li>Sign in with your Google account.</li>
+                  <li>Click <strong>"Create API Key"</strong>.</li>
+                  <li>Copy the generated key.</li>
+                  <li>Click the <strong>Settings</strong> gear icon in the top right of this app.</li>
+                  <li>Paste the key and click Save.</li>
+                </ol>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                This key is stored locally in your browser (localStorage), and whenever you request AI analysis for businesses, the custom API key is forwarded to the backend server and securely used to run the Gemini analysis on your behalf, allowing you to analyze contacts without quota restrictions.
+              </p>
+            </div>
+            
+            <div className="mt-8 flex justify-end gap-3">
+              <button 
+                onClick={() => setIsAiWarningOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                Close
+              </button>
+              <button 
+                onClick={() => {
+                  setIsAiWarningOpen(false);
+                  setIsSettingsOpen(true);
+                }}
+                className="px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-sm"
+              >
+                Open Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
