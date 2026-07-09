@@ -1,0 +1,8 @@
+{
+  "name": "Remix: Business Info Scraper",
+  "description": "Scrape legitimate business details from the web using keywords and export them as CSV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
