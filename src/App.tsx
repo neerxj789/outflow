@@ -4,15 +4,10 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { Download, Plus, Trash2, FileJson, Building2, AlertCircle, Users, PhoneCall, Clock, CheckCircle, XCircle, ArrowRight, Zap, Target, ChevronRight, Check, MapPin, Database, ChevronDown } from "lucide-react";
+import { Download, Plus, Trash2, FileJson, Building2, AlertCircle, Users, PhoneCall, Clock, CheckCircle, XCircle, ArrowRight, Zap, Target, ChevronRight, Check, MapPin, Database } from "lucide-react";
 import { motion } from "motion/react";
-import { auth, db, signInWithPopup, signOut, googleProvider, onAuthStateChanged, User } from "./firebase";
-import { collection, query, where, getDocs, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
-import { LogIn, LogOut, Share2, Link as LinkIcon, User as UserIcon, Sparkles, X, Coffee, Settings } from "lucide-react";
 
 interface Business {
-  painPoints?: string[];
-  isAnalyzing?: boolean;
   id: string;
   name: string;
   status: string;
@@ -26,75 +21,6 @@ interface TabData {
   name: string;
   businesses: Business[];
 }
-
-const CustomDropdown = ({ 
-  value, 
-  onChange, 
-  options, 
-  className = "", 
-  variant = "default" 
-}: { 
-  value: string, 
-  onChange: (val: string) => void, 
-  options: { label: string, value: string, className?: string }[], 
-  className?: string,
-  variant?: "default" | "status"
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (!(e.target as Element).closest('.custom-dropdown-container')) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener('click', handleOutsideClick);
-    }
-    return () => document.removeEventListener('click', handleOutsideClick);
-  }, [isOpen]);
-
-  const selectedOption = options.find(o => o.value === value) || options[0];
-
-  return (
-    <div className={`relative custom-dropdown-container ${className}`}>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        className={`w-full flex items-center justify-between gap-2 border px-3 py-2 text-sm rounded-lg outline-none transition-colors ${
-          variant === 'default' 
-            ? 'bg-black/40 border-white/10 text-white hover:bg-black/60 focus:ring-2 focus:ring-blue-500/50'
-            : selectedOption.className || 'bg-gray-800 border-gray-700 text-gray-200'
-        }`}
-      >
-        <span className="truncate">{selectedOption.label}</span>
-        <ChevronDown className="w-4 h-4 opacity-50 shrink-0" />
-      </button>
-      
-      {isOpen && (
-        <div className="absolute z-50 mt-1 w-full min-w-[max-content] bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden py-1">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              onClick={() => {
-                onChange(option.value);
-                setIsOpen(false);
-              }}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-800 transition-colors ${
-                value === option.value ? 'bg-gray-800/50 text-white' : 'text-gray-300'
-              } ${option.className && variant === 'status' ? option.className.replace(/border-[a-z0-9-/]+/, '').replace(/focus:ring-[a-z0-9-/]+/, '') : ''}`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 function extractBusinesses(input: string): Business[] {
   let results: Business[] = [];
@@ -208,7 +134,7 @@ function extractBusinesses(input: string): Business[] {
   return Array.from(unique.values());
 }
 
-function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onSignIn: () => void }) {
+function LandingPage({ onGetStarted }: { onGetStarted: () => void }) {
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-gray-100 font-sans selection:bg-blue-500/30 overflow-hidden">
       {/* Background patterns */}
@@ -221,20 +147,17 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
       <nav className="relative z-50 border-b border-white/5 bg-[#0A0A0A]/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold text-xl tracking-tight text-white">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <img src="/logo.svg" alt="Outflow Logo" className="w-8 h-8" />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
             </div>
             Outflow
           </div>
-          <div className="flex items-center gap-6">
-            <a href="#how-it-works" className="text-sm font-medium text-gray-300 hover:text-white hidden md:block transition-colors">How It Works</a>
-            <a href="https://rzp.io/rzp/spill-the-chai" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-300 hover:text-white hidden md:flex items-center gap-1.5 transition-colors">
-              <Coffee className="w-4 h-4 text-orange-400" /> Support the Dev
-            </a>
-            <button onClick={onSignIn} className="text-sm font-medium text-gray-300 hover:text-white flex items-center gap-2 transition-colors"><LogIn className="w-4 h-4"/> Sign In</button>
+          <div className="flex items-center gap-4 md:gap-6">
+            <a href="#how-it-works" className="hidden sm:block text-sm font-medium text-gray-300 hover:text-white transition-colors">How it works</a>
+            <a href="https://rzp.io/rzp/spill-the-chai" target="_blank" rel="noopener noreferrer" className="hidden sm:flex text-sm font-medium text-gray-300 hover:text-white transition-colors items-center gap-1">Buy me a Chai ☕</a>
             <button 
               onClick={onGetStarted}
-              className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-500 rounded-lg text-sm font-semibold transition-all shadow-lg shadow-blue-500/25"
+              className="px-5 py-2.5 bg-white text-black hover:bg-gray-100 rounded-lg font-medium transition-colors text-sm"
             >
               Get Started
             </button>
@@ -244,12 +167,12 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
 
       <main className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-32">
         {/* Hero Section */}
-        <section className="text-center max-w-4xl mx-auto space-y-8">
+        <section className="text-center max-w-6xl mx-auto space-y-8">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-medium tracking-wide mb-4"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-4"
           >
             <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
             Stop wasting hours on manual scraping.
@@ -259,16 +182,19 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-5xl md:text-7xl font-semibold tracking-tight text-white leading-[1.1]"
+            className="text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight text-white leading-[1.1] text-balance"
           >
-            Transform Messy Map Data Into Actionable Outreach Lists.
+            Transform Messy Map Data Into 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">
+              Actionable Outreach Lists.
+            </span>
           </motion.h1>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-400 font-medium leading-relaxed max-w-3xl mx-auto"
+            className="text-lg md:text-xl text-gray-400 font-medium leading-relaxed max-w-2xl mx-auto"
           >
             Paste raw exports from your scraper. We instantly extract the data and organize it into a built-in CRM so you can start reaching out in seconds.
           </motion.p>
@@ -277,16 +203,17 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="pt-6 flex flex-col items-center justify-center gap-3"
+            className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <button 
               onClick={onGetStarted}
-              className="px-10 py-4 bg-blue-600 text-white hover:bg-blue-500 rounded-xl font-semibold transition-all flex items-center gap-2 text-lg shadow-lg shadow-blue-500/25"
+              className="px-8 py-4 bg-white text-black hover:bg-gray-100 rounded-xl font-semibold transition-all flex items-center gap-2 text-lg group"
             >
-              Start Scraping Now
+              Start Scraping Now 
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <div className="text-gray-500 font-medium text-sm">
-              No credit card required.
+            <div className="text-gray-500 font-medium text-sm flex items-center gap-2">
+              <Check className="w-4 h-4 text-green-500" /> No credit card required.
             </div>
           </motion.div>
         </section>
@@ -334,39 +261,41 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
                   <p className="text-white text-sm font-medium">Dental Hospital</p>
                   <p className="text-gray-400 text-xs">contact@dental.com</p>
                 </div>
-                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded">NEW</span>
+                <span className="bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded">New</span>
               </div>
               <div className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/5">
                 <div>
                   <p className="text-white text-sm font-medium">City Clinic</p>
                   <p className="text-gray-400 text-xs">info@clinic.com</p>
                 </div>
-                <span className="bg-blue-500/20 text-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded">NEW</span>
+                <span className="bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded">New</span>
               </div>
-              <div className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/5 relative overflow-hidden">
+              <div className="bg-white/5 rounded-lg p-3 flex items-center justify-between border border-white/5">
                 <div>
                   <p className="text-white text-sm font-medium">Smile Care</p>
                   <p className="text-gray-400 text-xs">+91 1234567890</p>
                 </div>
-                <div className="flex gap-1.5">
-                    <span className="bg-blue-500/20 text-blue-400 border border-blue-500/20 text-[10px] font-medium px-2 py-0.5 rounded backdrop-blur-md">Outdated Site</span>
-                </div>
+                <span className="bg-blue-500/20 text-blue-300 text-xs px-2 py-1 rounded">New</span>
               </div>
             </div>
+
           </div>
         </motion.section>
 
         {/* Bento Grid Features */}
-        <section className="grid md:grid-cols-3 gap-6 mb-32">
+        <section className="grid md:grid-cols-3 gap-6">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-black/60 transition-colors"
+            className="bg-white/5 border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-white/10 transition-colors backdrop-blur-md"
           >
+            <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-400">
+              <Clock className="w-6 h-6" />
+            </div>
             <div>
-              <h3 className="text-xl font-semibold text-white mb-3">Skip the Manual Grind</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Skip the Manual Grind</h3>
               <p className="text-gray-400 font-medium leading-relaxed text-sm">
                 Searching maps, opening listings, and copying details is slow. Outflow automates the organization so you can focus on outreach.
               </p>
@@ -378,10 +307,13 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-black/60 transition-colors"
+            className="bg-white/5 border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-white/10 transition-colors backdrop-blur-md"
           >
+            <div className="w-12 h-12 bg-amber-500/20 rounded-2xl flex items-center justify-center text-amber-400">
+              <Zap className="w-6 h-6" />
+            </div>
             <div>
-              <h3 className="text-xl font-semibold text-white mb-3">Instant Extraction</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Instant Extraction</h3>
               <p className="text-gray-400 font-medium leading-relaxed text-sm">
                 Paste your raw, messy output. We automatically identify and extract names, emails, phones, and websites on the spot.
               </p>
@@ -393,10 +325,13 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
              whileInView={{ opacity: 1, y: 0 }}
              viewport={{ once: true }}
              transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-black/60 transition-colors"
+            className="bg-white/5 border border-white/10 p-8 rounded-3xl space-y-6 hover:bg-white/10 transition-colors backdrop-blur-md"
           >
+            <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400">
+              <Target className="w-6 h-6" />
+            </div>
             <div>
-              <h3 className="text-xl font-semibold text-white mb-3">Outreach-Ready CRM</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Outreach-Ready CRM</h3>
               <p className="text-gray-400 font-medium leading-relaxed text-sm">
                 Don't just clean the data—use it. Track contacted leads, follow-ups, and progress from a simple, built-in dashboard.
               </p>
@@ -405,209 +340,126 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
         </section>
 
         {/* How It Works Section */}
-        <section id="how-it-works" className="max-w-4xl mx-auto space-y-16">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-3xl md:text-4xl font-semibold text-center text-white"
-          >
-            How It Works
-          </motion.h2>
-
-          <div className="space-y-12 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
-            {/* Step 1 */}
+        <section id="how-it-works" className="mt-32 scroll-mt-24">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-semibold text-white">How It Works</h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
             <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active"
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="relative p-8 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-blue-500 bg-[#0A0A0A] text-blue-500 font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10">
-                1
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-blue-500/30 transition-colors">
-                <h3 className="text-xl font-semibold text-white mb-3">Step 1: Scrape the Map</h3>
-                <p className="text-gray-400 font-medium text-sm leading-relaxed">
-                  Install the <a href="https://chromewebstore.google.com/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Instant Data Scraper</a> Chrome extension (desktop only). Search Google Maps for your target—like "real estate in Florida"—and activate the extension with infinite scrolling. It automatically grabs all the listings on the screen.
-                </p>
-              </div>
+              <div className="text-6xl font-semibold text-blue-500/20 absolute -top-4 -right-4 select-none">1</div>
+              <h3 className="text-xl font-semibold text-white mb-4 relative z-10 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm">1</span>
+                Step 1: Scrape the Map
+              </h3>
+              <p className="text-gray-400 font-medium leading-relaxed text-sm relative z-10">
+                Install the <a href="https://chromewebstore.google.com/detail/instant-data-scraper/ofaokhiedipichpaobibbnahnkdoiiah?hl=en" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Instant Data Scraper</a> Chrome extension (desktop only). Search Google Maps for your target—like "real estate in Florida"—and activate the extension with infinite scrolling. It automatically grabs all the listings on the screen.
+              </p>
             </motion.div>
 
-            {/* Step 2 */}
             <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="relative p-8 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-blue-500 bg-[#0A0A0A] text-blue-500 font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10">
-                2
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-blue-500/30 transition-colors">
-                <h3 className="text-xl font-semibold text-white mb-3">Step 2: Paste the Mess</h3>
-                <p className="text-gray-400 font-medium text-sm leading-relaxed">
-                  Bring that chaotic, unformatted raw data directly into Outflow. No formatting, no fixing columns, and no spreadsheet headaches required—just copy and paste.
-                </p>
-              </div>
+              <div className="text-6xl font-semibold text-indigo-500/20 absolute -top-4 -right-4 select-none">2</div>
+              <h3 className="text-xl font-semibold text-white mb-4 relative z-10 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm">2</span>
+                Step 2: Paste the Mess
+              </h3>
+              <p className="text-gray-400 font-medium leading-relaxed text-sm relative z-10">
+                Bring that chaotic, unformatted raw data directly into Outflow. No formatting, no fixing columns, and no spreadsheet headaches required—just copy and paste.
+              </p>
             </motion.div>
 
-            {/* Step 3 */}
             <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="relative p-8 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10"
             >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border border-blue-500 bg-[#0A0A0A] text-blue-500 font-bold shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_15px_rgba(59,130,246,0.5)] z-10">
-                3
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 hover:border-blue-500/30 transition-colors">
-                <h3 className="text-xl font-semibold text-white mb-3">Step 3: Voila—Your CRM is Ready</h3>
-                <p className="text-gray-400 font-medium text-sm leading-relaxed">
-                  Our parser instantly cleans the noise, extracts the exact names, emails, and phone numbers, and organizes everything into your outreach dashboard. You are ready to start selling.
-                </p>
-              </div>
+              <div className="text-6xl font-semibold text-emerald-500/20 absolute -top-4 -right-4 select-none">3</div>
+              <h3 className="text-xl font-semibold text-white mb-4 relative z-10 flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm">3</span>
+                Step 3: Voila—Your CRM is Ready
+              </h3>
+              <p className="text-gray-400 font-medium leading-relaxed text-sm relative z-10">
+                Our parser instantly cleans the noise, extracts the exact names, emails, and phone numbers, and organizes everything into your outreach dashboard. You are ready to start selling.
+              </p>
             </motion.div>
           </div>
         </section>
-      </main>
-      
-      <footer className="border-t border-white/5 py-16 mt-32 text-center text-sm font-medium text-gray-500">
-        <div className="flex flex-col items-center justify-center gap-8">
-          <div className="bg-black/40 backdrop-blur-md border border-white/10 p-8 rounded-3xl max-w-md w-full shadow-2xl flex flex-col items-center gap-3 hover:border-orange-500/30 transition-colors">
-            <div className="w-12 h-12 bg-orange-500/10 text-orange-400 rounded-full flex items-center justify-center mb-2">
-              <Coffee className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white">Cutting Chai for Me</h3>
-            <p className="text-gray-400 leading-relaxed text-sm">
-              You can't buy happiness, but you can buy tea, and that's kind of the same thing!
+
+        {/* Support Section */}
+        <section className="mt-32 mb-16 text-center">
+          <div className="max-w-2xl mx-auto bg-gradient-to-b from-white/5 to-transparent border border-white/10 p-10 rounded-[2rem]">
+            <div className="text-4xl mb-4">☕</div>
+            <h2 className="text-2xl font-semibold text-white mb-4">Support the Developer</h2>
+            <p className="text-gray-400 italic mb-8 max-w-md mx-auto">
+              "You can't buy happiness, but you can buy tea, and that's kind of the same thing!"
             </p>
-            <a href="https://rzp.io/rzp/spill-the-chai" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-600 hover:bg-orange-500 rounded-xl text-white font-medium transition-all shadow-lg shadow-orange-600/20 w-full sm:w-auto">
+            <a 
+              href="https://rzp.io/rzp/spill-the-chai" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-[#FF8A00] hover:bg-[#FF8A00]/90 text-white rounded-xl font-medium transition-all text-lg shadow-lg shadow-[#FF8A00]/20"
+            >
               Buy Me a Cup of Chai ☕
             </a>
           </div>
-          <div>Created with love by <a href="https://framesbyneer.in" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">Neer</a></div>
-        </div>
+        </section>
+      </main>
+
+      {/* Simple Footer */}
+      <footer className="border-t border-white/5 py-8 flex flex-col items-center justify-center gap-2 text-sm text-gray-500 relative z-10">
+        <p>© {new Date().getFullYear()} Outflow. All rights reserved.</p>
+        <p>
+          Developed with <span className="text-red-500">♥</span> by{' '}
+          <a href="https://framesbyneer.in" target="_blank" rel="noopener noreferrer" className="text-gray-300 hover:text-white transition-colors font-medium">
+            neer
+          </a>
+        </p>
       </footer>
     </div>
   );
 }
 
-function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | null | undefined, sharedListId: string | null, onSignOut: () => void, onSignIn: () => void }) {
-  const [tabs, setTabs] = useState<TabData[]>([]);
-  const [activeTabId, setActiveTabId] = useState("");
+function Dashboard() {
+  const [tabs, setTabs] = useState<TabData[]>(() => {
+    try {
+      const saved = localStorage.getItem('business-tabs');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Failed to load tabs from local storage", e);
+    }
+    return [{ id: crypto.randomUUID(), name: "General", businesses: [] }];
+  });
+  const [activeTabId, setActiveTabId] = useState(tabs[0]?.id || "");
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [shareLink, setShareLink] = useState("");
   
   const [editingTabId, setEditingTabId] = useState<string | null>(null);
   const [editingTabName, setEditingTabName] = useState("");
-  
-  const [selectedTopic, setSelectedTopic] = useState("Branding & Web Design");
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-
-  const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem("userApiKey") || "");
-  const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem("apiBaseUrl") || "");
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isAiWarningOpen, setIsAiWarningOpen] = useState(false);
 
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      if (sharedListId) {
-        try {
-          const docRef = doc(db, "lists", sharedListId);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            const loadedTab = { id: docSnap.id, name: data.name, businesses: data.businesses || [] };
-            setTabs([loadedTab]);
-            setActiveTabId(docSnap.id);
-          } else {
-            setError("Shared list not found or you do not have permission to view it.");
-          }
-        } catch (e) {
-          setError("Failed to load shared list.");
-        }
-      } else if (user) {
-        try {
-          const q = query(collection(db, "lists"), where("ownerId", "==", user.uid));
-          const querySnapshot = await getDocs(q);
-          const userTabs: TabData[] = [];
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            userTabs.push({ id: doc.id, name: data.name, businesses: data.businesses || [] });
-          });
-          if (userTabs.length === 0) {
-            const newId = crypto.randomUUID();
-            userTabs.push({ id: newId, name: "General", businesses: [] });
-            await setDoc(doc(db, "lists", newId), {
-              ownerId: user.uid,
-              name: "General",
-              businesses: [],
-              isShared: false,
-              createdAt: new Date(),
-              updatedAt: new Date()
-            });
-          }
-          setTabs(userTabs);
-          setActiveTabId(userTabs[0].id);
-        } catch (e) {
-          setError("Failed to load your lists.");
-        }
-      } else {
-        try {
-          const saved = localStorage.getItem('business-tabs');
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            setTabs(parsed);
-            if (parsed.length > 0) setActiveTabId(parsed[0].id);
-          } else {
-            const defaultTab = { id: crypto.randomUUID(), name: "General", businesses: [] };
-            setTabs([defaultTab]);
-            setActiveTabId(defaultTab.id);
-          }
-        } catch (e) {
-          console.error(e);
-          const defaultTab = { id: crypto.randomUUID(), name: "General", businesses: [] };
-          setTabs([defaultTab]);
-          setActiveTabId(defaultTab.id);
-        }
-      }
-      setIsLoading(false);
-    };
-    loadData();
-  }, [user, sharedListId]);
+    localStorage.setItem('business-tabs', JSON.stringify(tabs));
+  }, [tabs]);
 
   useEffect(() => {
     if (!tabs.find(t => t.id === activeTabId) && tabs.length > 0) {
       setActiveTabId(tabs[0].id);
     }
   }, [tabs, activeTabId]);
-
-  useEffect(() => {
-    if (sharedListId || isLoading) return;
-    if (!user) {
-      if (tabs.length > 0) {
-         localStorage.setItem('business-tabs', JSON.stringify(tabs));
-      }
-    } else if (tabs.length > 0) {
-      const timeout = setTimeout(() => {
-        const active = tabs.find(t => t.id === activeTabId);
-        if (active) {
-          setDoc(doc(db, "lists", active.id), {
-            ownerId: user.uid,
-            name: active.name,
-            businesses: active.businesses,
-            updatedAt: new Date()
-          }, { merge: true }).catch(console.error);
-        }
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [tabs, activeTabId, user, sharedListId, isLoading]);
 
   const activeTab = tabs.find(t => t.id === activeTabId);
 
@@ -641,33 +493,20 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
     }
   };
 
-  const addTab = async () => {
+  const addTab = () => {
     const newTab = { id: crypto.randomUUID(), name: `Category ${tabs.length + 1}`, businesses: [] };
     setTabs(prev => [...prev, newTab]);
     setActiveTabId(newTab.id);
     setJsonInput("");
     setError(null);
-    if (user && !sharedListId) {
-      await setDoc(doc(db, "lists", newTab.id), {
-        ownerId: user.uid,
-        name: newTab.name,
-        businesses: [],
-        isShared: false,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-    }
   };
 
-  const deleteTab = async (id: string) => {
+  const deleteTab = (id: string) => {
     if (tabs.length === 1) return;
     const newTabs = tabs.filter(t => t.id !== id);
     setTabs(newTabs);
     if (activeTabId === id) {
       setActiveTabId(newTabs[0].id);
-    }
-    if (user && !sharedListId) {
-      await deleteDoc(doc(db, "lists", id)).catch(console.error);
     }
   };
 
@@ -697,105 +536,6 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
       }
       return tab;
     }));
-  };
-
-  const handleBulkAnalyze = async () => {
-    if (selectedRows.size === 0) return;
-    
-    if (!userApiKey) {
-      setIsAiWarningOpen(true);
-      return;
-    }
-
-    const businessesToAnalyze = activeTab?.businesses.filter(b => selectedRows.has(b.id)) || [];
-
-    setTabs(prev => prev.map(tab => {
-      if (tab.id === activeTabId) {
-        return {
-          ...tab,
-          businesses: tab.businesses.map(b => selectedRows.has(b.id) ? { ...b, isAnalyzing: true } : b)
-        };
-      }
-      return tab;
-    }));
-
-    await Promise.allSettled(businessesToAnalyze.map(async (business) => {
-      try {
-        const baseUrl = apiBaseUrl.replace(/\/$/, ''); // Remove trailing slash if present
-        const response = await fetch(`${baseUrl}/api/analyze`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            websiteUrl: business.website?.startsWith('http') ? business.website : (business.website ? `https://${business.website}` : ''),
-            topic: selectedTopic,
-            businessName: business.name,
-            apiKey: userApiKey
-          })
-        });
-
-        const data = await response.json();
-        const painPoints = data.pain_points || ["Could not analyze business."];
-
-        setTabs(prev => prev.map(tab => {
-          if (tab.id === activeTabId) {
-            return {
-              ...tab,
-              businesses: tab.businesses.map(b => b.id === business.id ? { ...b, isAnalyzing: false, painPoints } : b)
-            };
-          }
-          return tab;
-        }));
-      } catch (err) {
-        console.error(err);
-        setTabs(prev => prev.map(tab => {
-          if (tab.id === activeTabId) {
-            return {
-              ...tab,
-              businesses: tab.businesses.map(b => b.id === business.id ? { ...b, isAnalyzing: false, painPoints: ["Failed to run analysis."] } : b)
-            };
-          }
-          return tab;
-        }));
-      }
-    }));
-  };
-
-  const toggleRowSelection = (businessId: string) => {
-    setSelectedRows(prev => {
-      const next = new Set(prev);
-      if (next.has(businessId)) next.delete(businessId);
-      else next.add(businessId);
-      return next;
-    });
-  };
-
-  const toggleAllRows = () => {
-    if (!activeTab) return;
-    if (selectedRows.size === activeTab.businesses.length) {
-      setSelectedRows(new Set());
-    } else {
-      setSelectedRows(new Set(activeTab.businesses.map(b => b.id)));
-    }
-  };
-
-  const handleShare = async () => {
-    if (!user) {
-      alert("Please sign in to share lists.");
-      return;
-    }
-    const active = tabs.find(t => t.id === activeTabId);
-    if (!active) return;
-    
-    try {
-      await setDoc(doc(db, "lists", active.id), {
-        isShared: true
-      }, { merge: true });
-      const link = `${window.location.origin}/?list=${active.id}`;
-      setShareLink(link);
-    } catch (e) {
-      console.error(e);
-      alert("Failed to generate share link.");
-    }
   };
 
   const exportCSV = (tab: TabData) => {
@@ -833,34 +573,13 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-              <img src="/logo.svg" alt="Outflow Logo" className="w-8 h-8" />
-              Outflow CRM
-              {sharedListId && <span className="text-xs bg-blue-900/50 text-blue-400 px-2 py-1 rounded-full border border-blue-800 ml-2">Shared View</span>}
+              <Building2 className="w-8 h-8 text-blue-500" />
+              Raw Data Contact Parser
             </h1>
-            <p className="text-gray-400 mt-1 font-medium">Clean and organize raw map data exports into actionable lists.</p>
+            <p className="text-gray-400 mt-1 font-medium">Clean and organize raw text (TSV, CSV) or JSON data into categorized contact lists.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setIsSettingsOpen(true)} className="p-2.5 rounded-xl border border-gray-800 bg-gray-900/50 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors shadow-sm" title="Settings">
-              <Settings className="w-4 h-4"/>
-            </button>
-            {user ? (
-              <div className="flex items-center gap-4 border border-gray-800 bg-gray-900/50 rounded-xl p-2 px-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm text-gray-300 font-medium">
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="Avatar" className="w-6 h-6 rounded-full" />
-                  ) : (
-                    <UserIcon className="w-5 h-5 text-gray-500" />
-                  )}
-                  {user.displayName || user.email}
-                </div>
-                <div className="w-px h-4 bg-gray-800"></div>
-                <button onClick={onSignOut} className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors"><LogOut className="w-4 h-4"/> Sign Out</button>
-              </div>
-            ) : (
-              <button onClick={onSignIn} className="text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm">
-                <LogIn className="w-4 h-4"/> Sign In to Save
-              </button>
-            )}
+          <div className="flex items-center gap-4">
+             <a href="https://rzp.io/rzp/spill-the-chai" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-gray-300 hover:text-white transition-colors flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-lg border border-gray-700 hover:bg-gray-700">Buy me a Chai ☕</a>
           </div>
         </header>
 
@@ -1007,152 +726,75 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
               <h3 className="font-medium text-gray-400 text-sm">
                 {activeTab?.businesses.length || 0} Contacts Extracted
               </h3>
-              <div className="flex items-center gap-3">
-                <CustomDropdown
-                  value={selectedTopic}
-                  onChange={(val) => setSelectedTopic(val)}
-                  options={[
-                    { label: "Branding & Web Design", value: "Branding & Web Design" },
-                    { label: "SEO & Content Marketing", value: "SEO & Content Marketing" },
-                    { label: "Social Media Management", value: "Social Media Management" },
-                    { label: "Operational Efficiency", value: "Operational Efficiency" }
-                  ]}
-                />
-                <button
-                  onClick={handleBulkAnalyze}
-                  disabled={selectedRows.size === 0}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600/20 text-purple-400 border border-purple-900/50 rounded-lg text-sm font-medium hover:bg-purple-600/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Analyze Leads
-                </button>
-                {!sharedListId && (
-                  <button
-                    onClick={handleShare}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/20 text-blue-400 border border-blue-900/50 rounded-lg text-sm font-medium hover:bg-blue-600/30 transition-colors shadow-sm"
-                  >
-                    <Share2 className="w-4 h-4" />
-                    Share List
-                  </button>
-                )}
-                <button
-                  onClick={() => activeTab && exportCSV(activeTab)}
-                  disabled={!activeTab || activeTab.businesses.length === 0}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white shadow-sm"
-                >
-                  <Download className="w-4 h-4" />
-                  Export CSV
-                </button>
-              </div>
+              <button
+                onClick={() => activeTab && exportCSV(activeTab)}
+                disabled={!activeTab || activeTab.businesses.length === 0}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-sm font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
             </div>
-            
-            {shareLink && (
-              <div className="p-4 border-b border-gray-800 bg-blue-900/10 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-500/20 rounded-lg text-blue-400">
-                    <LinkIcon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-200">Anyone with the link can view this list</h4>
-                    <p className="text-xs text-blue-400 break-all select-all">{shareLink}</p>
-                  </div>
-                </div>
-                <button onClick={() => setShareLink("")} className="text-sm text-gray-500 hover:text-white">Close</button>
-              </div>
-            )}
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[900px]">
                 <thead>
                   <tr className="bg-gray-800/50 border-b border-gray-800">
-                    <th className="px-6 py-4 w-12 text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={activeTab?.businesses.length > 0 && selectedRows.size === activeTab?.businesses.length}
-                        onChange={toggleAllRows}
-                        className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500/50"
-                      />
-                    </th>
-                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[15%]">Name</th>
+                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[25%]">Name</th>
                     <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[15%]">Status</th>
-                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[10%]">Number</th>
-                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[15%]">Website</th>
-                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[15%]">Email</th>
-                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[25%]">Key Weaknesses</th>
+                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[15%]">Number</th>
+                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[20%]">Website</th>
+                    <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[20%]">Email</th>
                     <th className="px-6 py-4 font-medium text-gray-400 text-sm w-[5%]"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {activeTab?.businesses.map((b) => (
-                    <React.Fragment key={b.id}>
-                      <tr className="hover:bg-gray-800/30 transition-colors group">
-                        <td className="px-6 py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={selectedRows.has(b.id)}
-                            onChange={() => toggleRowSelection(b.id)}
-                            className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500/50"
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-100">{b.name}</td>
-                        <td className="px-6 py-4 text-sm">
-                          <CustomDropdown
-                            value={b.status || 'New'}
-                            onChange={(val) => updateStatus(b.id, val)}
-                            variant="status"
-                            className="min-w-[150px]"
-                            options={[
-                              { label: "New", value: "New", className: "bg-gray-800 text-gray-200 border-gray-700" },
-                              { label: "Contacted", value: "Contacted", className: "bg-blue-900/30 text-blue-300 border-blue-800/50" },
-                              { label: "Interested", value: "Interested", className: "bg-green-900/30 text-green-300 border-green-800/50" },
-                              { label: "Not Interested", value: "Not Interested", className: "bg-red-900/30 text-red-300 border-red-800/50" },
-                              { label: "Follow Up", value: "Follow Up", className: "bg-yellow-900/30 text-yellow-300 border-yellow-800/50" }
-                            ]}
-                          />
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-400 whitespace-nowrap">{b.number || "-"}</td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-400">
-                          {b.website ? (
-                            <a href={b.website.startsWith('http') ? b.website : `https://${b.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline break-all">
-                              {b.website}
-                            </a>
-                          ) : "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-400">
-                          {b.email ? (
-                            <a href={`mailto:${b.email}`} className="text-blue-400 hover:text-blue-300 hover:underline break-all">
-                              {b.email}
-                            </a>
-                          ) : "-"}
-                        </td>
-                        <td className="px-6 py-4 text-sm">
-                          {b.isAnalyzing ? (
-                            <div className="flex items-center gap-2 text-purple-400 text-xs font-medium">
-                              <div className="w-3 h-3 rounded-full border-2 border-purple-500 border-t-transparent animate-spin"></div>
-                              Analyzing...
-                            </div>
-                          ) : b.painPoints && b.painPoints.length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              {b.painPoints.map((pt, i) => (
-                                <span key={i} className="inline-flex items-center px-2 py-1 rounded bg-blue-500/10 backdrop-blur-md border border-blue-500/20 text-[11px] font-medium text-blue-400">
-                                  {pt}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-600">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => removeBusiness(b.id)}
-                            className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-800"
-                            title="Remove item"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    </React.Fragment>
+                    <tr key={b.id} className="hover:bg-gray-800/30 transition-colors group">
+                      <td className="px-6 py-4 text-sm font-medium text-gray-100">{b.name}</td>
+                      <td className="px-6 py-4 text-sm">
+                        <select
+                          value={b.status || 'New'}
+                          onChange={(e) => updateStatus(b.id, e.target.value)}
+                          className={`border text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full min-w-[130px] px-3 py-2.5 outline-none font-medium transition-colors ${
+                            b.status === 'Contacted' ? 'bg-blue-900/30 text-blue-300 border-blue-800/50' :
+                            b.status === 'Interested' ? 'bg-green-900/30 text-green-300 border-green-800/50' :
+                            b.status === 'Not Interested' ? 'bg-red-900/30 text-red-300 border-red-800/50' :
+                            b.status === 'Follow Up' ? 'bg-yellow-900/30 text-yellow-300 border-yellow-800/50' :
+                            'bg-gray-800 text-gray-200 border-gray-700'
+                          }`}
+                        >
+                          <option value="New" className="bg-gray-900 text-gray-200">New</option>
+                          <option value="Contacted" className="bg-gray-900 text-gray-200">Contacted</option>
+                          <option value="Interested" className="bg-gray-900 text-gray-200">Interested</option>
+                          <option value="Not Interested" className="bg-gray-900 text-gray-200">Not Interested</option>
+                          <option value="Follow Up" className="bg-gray-900 text-gray-200">Follow Up</option>
+                        </select>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-400 whitespace-nowrap">{b.number || "-"}</td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-400">
+                        {b.website ? (
+                          <a href={b.website.startsWith('http') ? b.website : `https://${b.website}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 hover:underline break-all">
+                            {b.website}
+                          </a>
+                        ) : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-400">
+                        {b.email ? (
+                          <a href={`mailto:${b.email}`} className="text-blue-400 hover:text-blue-300 hover:underline break-all">
+                            {b.email}
+                          </a>
+                        ) : "-"}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button 
+                          onClick={() => removeBusiness(b.id)}
+                          className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-800"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                   {(!activeTab || activeTab.businesses.length === 0) && (
                     <tr>
@@ -1167,199 +809,16 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
           </div>
         </div>
       </div>
-      
-      <footer className="border-t border-white/5 py-16 mt-16 text-center text-sm font-medium text-gray-500">
-        <div className="flex flex-col items-center justify-center gap-8">
-          <div className="bg-gray-900 border border-gray-800 p-8 rounded-3xl max-w-md w-full shadow-sm flex flex-col items-center gap-3 hover:border-orange-500/30 transition-colors">
-            <div className="w-12 h-12 bg-orange-500/10 text-orange-400 rounded-full flex items-center justify-center mb-2">
-              <Coffee className="w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-semibold text-white">Cutting Chai for Me</h3>
-            <p className="text-gray-400 leading-relaxed text-sm">
-              You can't buy happiness, but you can buy tea, and that's kind of the same thing!
-            </p>
-            <a href="https://rzp.io/rzp/spill-the-chai" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-orange-600 hover:bg-orange-500 rounded-xl text-white font-medium transition-all shadow-lg shadow-orange-600/20 w-full sm:w-auto">
-              Buy Me a Cup of Chai ☕
-            </a>
-          </div>
-          <div>Created with love by <a href="https://framesbyneer.in" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400 transition-colors">Neer</a></div>
-        </div>
-      </footer>
-      
-      {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-            <button onClick={() => setIsSettingsOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-              <Settings className="w-5 h-5" /> Settings
-            </h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Gemini API Key</label>
-                <input
-                  type="password"
-                  value={userApiKey}
-                  onChange={(e) => setUserApiKey(e.target.value)}
-                  placeholder="AIza..."
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                />
-                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                  Provide your own Gemini API key to run AI analysis without limits. This key is stored locally in your browser (localStorage), and whenever you request AI analysis for businesses, the custom API key is forwarded to the backend server and securely used to run the Gemini analysis on your behalf, allowing you to analyze contacts without quota restrictions.
-                </p>
-              </div>
-              <div className="pt-2">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Backend API URL (Optional)</label>
-                <input
-                  type="url"
-                  value={apiBaseUrl}
-                  onChange={(e) => setApiBaseUrl(e.target.value)}
-                  placeholder="https://your-backend-url.com"
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
-                />
-                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
-                  If you are hosting the frontend separately (e.g., on Netlify), provide the URL to your deployed backend server. Leave empty to use relative paths.
-                </p>
-              </div>
-            </div>
-            
-            <div className="mt-8 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={() => {
-                  localStorage.setItem("userApiKey", userApiKey);
-                  localStorage.setItem("apiBaseUrl", apiBaseUrl);
-                  setIsSettingsOpen(false);
-                }}
-                className="px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-sm"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {isAiWarningOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-gray-900 border border-orange-500/30 rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
-            <button onClick={() => setIsAiWarningOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-400">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <h2 className="text-xl font-semibold text-white">AI Not Configured</h2>
-            </div>
-            
-            <div className="space-y-4 text-sm text-gray-300">
-              <p>Analysing requires AI features. To use the AI Analysis features, you need to configure a free Gemini API key, or buy a paid plan (which is not yet available). This ensures you can analyze unlimited leads without server limits.</p>
-              
-              <div className="bg-gray-950 rounded-xl p-4 border border-gray-800 space-y-3">
-                <h4 className="font-medium text-white flex items-center gap-2"><Sparkles className="w-4 h-4 text-blue-400"/> How to set it up (Takes 1 min)</h4>
-                <ol className="list-decimal list-inside space-y-2 text-gray-400">
-                  <li>Go to <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google AI Studio</a>.</li>
-                  <li>Sign in with your Google account.</li>
-                  <li>Click <strong>"Create API Key"</strong>.</li>
-                  <li>Copy the generated key.</li>
-                  <li>Click the <strong>Settings</strong> gear icon in the top right of this app.</li>
-                  <li>Paste the key and click Save.</li>
-                </ol>
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                This key is stored locally in your browser (localStorage), and whenever you request AI analysis for businesses, the custom API key is forwarded to the backend server and securely used to run the Gemini analysis on your behalf, allowing you to analyze contacts without quota restrictions.
-              </p>
-            </div>
-            
-            <div className="mt-8 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsAiWarningOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                Close
-              </button>
-              <button 
-                onClick={() => {
-                  setIsAiWarningOpen(false);
-                  setIsSettingsOpen(true);
-                }}
-                className="px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-sm"
-              >
-                Open Settings
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 export default function App() {
   const [showApp, setShowApp] = useState(false);
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  const [sharedListId, setSharedListId] = useState<string | null>(null);
-  const [signInError, setSignInError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const listId = urlParams.get('list');
-    if (listId) {
-      setSharedListId(listId);
-      setShowApp(true);
-    }
-  }, []);
+  if (!showApp) {
+    return <LandingPage onGetStarted={() => setShowApp(true)} />;
+  }
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleSignIn = async () => {
-    setSignInError(null);
-    try {
-      await signInWithPopup(auth, googleProvider);
-      setShowApp(true);
-    } catch (e: any) {
-      console.error(e);
-      setSignInError("Sign in failed. Popups might be blocked in this preview. Try opening the app in a new tab.");
-    }
-  };
-
-  const handleSignOut = async () => {
-    await signOut(auth);
-    setSharedListId(null);
-    window.history.replaceState({}, '', '/');
-  };
-
-  if (user === undefined) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div></div>;
-
-  return (
-    <>
-      {signInError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md w-full">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <p className="text-sm font-medium">{signInError}</p>
-          <button onClick={() => setSignInError(null)} className="ml-auto text-white/80 hover:text-white">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-      {!showApp ? (
-        <LandingPage onGetStarted={() => setShowApp(true)} onSignIn={handleSignIn} />
-      ) : (
-        <Dashboard user={user} sharedListId={sharedListId} onSignOut={handleSignOut} onSignIn={handleSignIn} />
-      )}
-    </>
-  );
+  return <Dashboard />;
 }
