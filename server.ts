@@ -85,6 +85,89 @@ Make sure to search the web and only return real data.`;
     }
   });
 
+  
+  app.post("/api/analyze", async (req, res) => {
+    try {
+      const { websiteUrl, topic, businessName } = req.body;
+      if (!topic) {
+        return res.status(400).json({ error: "Topic is required" });
+      }
+
+      let crawledText = "";
+      
+      if (websiteUrl) {
+        try {
+          const response = await fetch(websiteUrl, {
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' }
+          });
+          const html = await response.text();
+          const cheerio = await import('cheerio');
+          const $ = cheerio.load(html);
+          
+          // Remove scripts, styles, etc.
+          $('script, style, noscript, iframe, img, svg, video').remove();
+          
+          // Get text and clean it up
+          crawledText = $('body').text().replace(/\s+/g, ' ').trim();
+          
+          // Limit length to avoid huge prompts
+          if (crawledText.length > 20000) {
+            crawledText = crawledText.substring(0, 20000);
+          }
+        } catch (fetchErr) {
+          console.error("Failed to scrape website:", fetchErr);
+        }
+      }
+
+      if (!crawledText) {
+        crawledText = `Could not extract website content directly. Please analyze based on the business name: ${businessName} and the fact that their website might be down, missing, or inaccessible.`;
+      }
+
+      const systemInstruction = `You are a data extraction tool. Analyze text to identify business weaknesses based on the user's topic. 
+Rules:
+1. Output 2 to 4 concise bullet points.
+2. Base findings strictly on text. Do not hallucinate.
+3. If insufficient data, output: 'Insufficient data for analysis.'
+Output exactly as a JSON object with a 'pain_points' array of strings.`;
+
+      const prompt = `Topic: ${topic} \n\n Input Text: \n ${crawledText}`;
+
+      const aiResponse = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              pain_points: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ["pain_points"]
+          }
+        },
+      });
+
+      const jsonStr = aiResponse.text?.trim() || "{}";
+      let result = { pain_points: [] };
+      try {
+        result = JSON.parse(jsonStr);
+      } catch (err) {
+        console.error("Failed to parse JSON response:", jsonStr);
+        return res.status(500).json({ error: "Failed to parse AI response." });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Analyze API Error:", error);
+      res.status(500).json({ error: error.message || "Failed to analyze business." });
+    }
+  });
+
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
