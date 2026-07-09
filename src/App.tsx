@@ -152,8 +152,8 @@ function LandingPage({ onGetStarted, onSignIn }: { onGetStarted: () => void, onS
       <nav className="relative z-50 border-b border-white/5 bg-[#0A0A0A]/50 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold text-xl tracking-tight text-white">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+              <img src="/logo.svg" alt="Outflow Logo" className="w-8 h-8" />
             </div>
             Outflow
           </div>
@@ -752,7 +752,7 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-              <Building2 className="w-8 h-8 text-blue-500" />
+              <img src="/logo.svg" alt="Outflow Logo" className="w-8 h-8" />
               Outflow CRM
               {sharedListId && <span className="text-xs bg-blue-900/50 text-blue-400 px-2 py-1 rounded-full border border-blue-800 ml-2">Shared View</span>}
             </h1>
