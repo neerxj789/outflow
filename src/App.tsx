@@ -509,6 +509,7 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
 
   const [userApiKey, setUserApiKey] = useState(() => localStorage.getItem("userApiKey") || "");
+  const [apiBaseUrl, setApiBaseUrl] = useState(() => localStorage.getItem("apiBaseUrl") || "");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAiWarningOpen, setIsAiWarningOpen] = useState(false);
 
@@ -720,7 +721,8 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
 
     await Promise.allSettled(businessesToAnalyze.map(async (business) => {
       try {
-        const response = await fetch('/api/analyze', {
+        const baseUrl = apiBaseUrl.replace(/\/$/, ''); // Remove trailing slash if present
+        const response = await fetch(`${baseUrl}/api/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -838,6 +840,9 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
             <p className="text-gray-400 mt-1 font-medium">Clean and organize raw map data exports into actionable lists.</p>
           </div>
           <div className="flex items-center gap-3">
+            <button onClick={() => setIsSettingsOpen(true)} className="p-2.5 rounded-xl border border-gray-800 bg-gray-900/50 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors shadow-sm" title="Settings">
+              <Settings className="w-4 h-4"/>
+            </button>
             {user ? (
               <div className="flex items-center gap-4 border border-gray-800 bg-gray-900/50 rounded-xl p-2 px-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm text-gray-300 font-medium">
@@ -849,7 +854,6 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
                   {user.displayName || user.email}
                 </div>
                 <div className="w-px h-4 bg-gray-800"></div>
-                <button onClick={() => setIsSettingsOpen(true)} className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors" title="Settings"><Settings className="w-4 h-4"/></button>
                 <button onClick={onSignOut} className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors"><LogOut className="w-4 h-4"/> Sign Out</button>
               </div>
             ) : (
@@ -1206,6 +1210,19 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
                   Provide your own Gemini API key to run AI analysis without limits. This key is stored locally in your browser (localStorage), and whenever you request AI analysis for businesses, the custom API key is forwarded to the backend server and securely used to run the Gemini analysis on your behalf, allowing you to analyze contacts without quota restrictions.
                 </p>
               </div>
+              <div className="pt-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">Backend API URL (Optional)</label>
+                <input
+                  type="url"
+                  value={apiBaseUrl}
+                  onChange={(e) => setApiBaseUrl(e.target.value)}
+                  placeholder="https://your-backend-url.com"
+                  className="w-full bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                />
+                <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+                  If you are hosting the frontend separately (e.g., on Netlify), provide the URL to your deployed backend server. Leave empty to use relative paths.
+                </p>
+              </div>
             </div>
             
             <div className="mt-8 flex justify-end gap-3">
@@ -1218,6 +1235,7 @@ function Dashboard({ user, sharedListId, onSignOut, onSignIn }: { user: User | n
               <button 
                 onClick={() => {
                   localStorage.setItem("userApiKey", userApiKey);
+                  localStorage.setItem("apiBaseUrl", apiBaseUrl);
                   setIsSettingsOpen(false);
                 }}
                 className="px-6 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition-colors shadow-sm"
@@ -1289,6 +1307,7 @@ export default function App() {
   const [showApp, setShowApp] = useState(false);
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [sharedListId, setSharedListId] = useState<string | null>(null);
+  const [signInError, setSignInError] = useState<string | null>(null);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1307,11 +1326,13 @@ export default function App() {
   }, []);
 
   const handleSignIn = async () => {
+    setSignInError(null);
     try {
       await signInWithPopup(auth, googleProvider);
       setShowApp(true);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setSignInError("Sign in failed. Popups might be blocked in this preview. Try opening the app in a new tab.");
     }
   };
 
@@ -1323,9 +1344,22 @@ export default function App() {
 
   if (user === undefined) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div></div>;
 
-  if (!showApp) {
-    return <LandingPage onGetStarted={() => setShowApp(true)} onSignIn={handleSignIn} />;
-  }
-
-  return <Dashboard user={user} sharedListId={sharedListId} onSignOut={handleSignOut} onSignIn={handleSignIn} />;
+  return (
+    <>
+      {signInError && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] bg-red-500/90 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md w-full">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p className="text-sm font-medium">{signInError}</p>
+          <button onClick={() => setSignInError(null)} className="ml-auto text-white/80 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {!showApp ? (
+        <LandingPage onGetStarted={() => setShowApp(true)} onSignIn={handleSignIn} />
+      ) : (
+        <Dashboard user={user} sharedListId={sharedListId} onSignOut={handleSignOut} onSignIn={handleSignIn} />
+      )}
+    </>
+  );
 }
