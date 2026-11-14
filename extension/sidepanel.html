@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Outflow Scraper</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <span class="brand">Outflow</span>
+        <span id="counter" class="counter">0 / 200</span>
+      </header>
+
+      <section class="panel">
+        <div class="field">
+          <label for="outflow-url" class="label">Outflow App URL</label>
+          <input
+            id="outflow-url"
+            type="url"
+            placeholder="https://your-outflow-app-url"
+            class="input"
+          />
+        </div>
+
+        <label class="toggle-row">
+          <input id="scan-links" type="checkbox" />
+          <span>Scan linked pages for email &amp; phone</span>
+        </label>
+
+        <div class="actions">
+          <button id="start-btn" type="button" class="btn btn-primary">
+            Start Scrape
+          </button>
+          <button id="stop-btn" type="button" class="btn btn-danger" hidden>
+            Stop
+          </button>
+          <button id="clear-btn" type="button" class="btn btn-secondary">
+            Clear
+          </button>
+        </div>
+
+        <div id="status-bar" class="status-bar">
+          Ready to extract leads from the open page.
+        </div>
+        <div id="error-bar" class="error-bar" hidden></div>
+      </section>
+
+      <section class="table-card">
+        <div class="table-header">
+          <span class="table-title">Extracted Contacts</span>
+          <span id="page-indicator" class="page-indicator">Page 1</span>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          Open any webpage with links or listings and click Start Scrape.
+        </div>
+
+        <div id="table-wrap" class="table-wrap" hidden>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Source</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="leads-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="footer-actions">
+        <button id="copy-csv-btn" type="button" class="btn btn-secondary" disabled>
+          Copy CSV
+        </button>
+        <button id="download-csv-btn" type="button" class="btn btn-secondary" disabled>
+          Download CSV
+        </button>
+        <button id="send-outflow-btn" type="button" class="btn btn-primary" disabled>
+          Send to Outflow
+        </button>
+      </footer>
+    </div>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

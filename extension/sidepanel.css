@@ -1,0 +1,268 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #1e1e1e;
+  color: #ffffff;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.brand {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+}
+
+.counter {
+  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #bef264;
+  background: #232a18;
+  border: 1px solid rgba(190, 242, 100, 0.45);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.panel,
+.table-card {
+  background: #2c2c2c;
+  border: 1px solid #3d3d3d;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #d4d4d4;
+}
+
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: #161616;
+  border: 1px solid #3d3d3d;
+  color: #ffffff;
+  font-size: 12px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #bef264;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #d4d4d4;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-row input {
+  accent-color: #bef264;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: #bef264;
+  color: #000000;
+  border-color: #bef264;
+  flex: 1;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #d9f99d;
+}
+
+.btn-secondary {
+  background: #1e1e1e;
+  color: #ffffff;
+  border-color: #3d3d3d;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #363636;
+}
+
+.btn-danger {
+  background: #2b1c1c;
+  color: #f87171;
+  border-color: #f87171;
+  flex: 1;
+}
+
+.status-bar {
+  font-size: 12px;
+  color: #a3a3a3;
+}
+
+.error-bar {
+  font-size: 12px;
+  color: #f87171;
+  background: #2b1c1c;
+  border: 1px solid #f87171;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.table-card {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.table-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.page-indicator {
+  font-size: 11px;
+  color: #a3a3a3;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty-state {
+  padding: 28px 14px;
+  text-align: center;
+  color: #a3a3a3;
+  font-size: 12px;
+}
+
+.table-wrap {
+  overflow: auto;
+  max-height: 360px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid #3d3d3d;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+th {
+  background: #252525;
+  color: #a3a3a3;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+}
+
+td.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+td a {
+  color: #bef264;
+  text-decoration: none;
+}
+
+td a:hover {
+  text-decoration: underline;
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  color: #a3a3a3;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+}
+
+.remove-btn:hover {
+  color: #f87171;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
